@@ -126,7 +126,9 @@ tracked_corners = np.float32([
 
 writer.write(first_frame)
 
-frame_number = 1
+processed_frames = 1
+tracked_frames = 1
+failed_frames = 0
 
 while True:
     success, frame = video.read()
@@ -183,6 +185,8 @@ while True:
                         tracked = True
 
     if tracked:
+        tracked_frames += 1
+
         polygon = np.int32(tracked_corners)
 
         cv2.polylines(
@@ -210,6 +214,8 @@ while True:
             2
         )
     else:
+        failed_frames += 1
+
         cv2.putText(
             frame,
             "Failed",
@@ -221,17 +227,30 @@ while True:
         )
 
     writer.write(frame)
+    processed_frames += 1
+
     cv2.imshow("Object Tracking", frame)
 
     # Stop processing
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
-    frame_number += 1
-
 video.release()
 writer.release()
 cv2.destroyAllWindows()
 
-print(f"Processed frames: {frame_number}")
 print(f"Output saved to: {output_path}")
+
+# Statistics
+tracking_rate = tracked_frames / processed_frames * 100
+failure_rate = failed_frames / processed_frames * 100
+
+print(f"Processed frames: {processed_frames}")
+print(
+    f"Tracked frames: {tracked_frames} "
+    f"({tracking_rate:.2f}%)"
+)
+print(
+    f"Failed frames: {failed_frames} "
+    f"({failure_rate:.2f}%)"
+)
